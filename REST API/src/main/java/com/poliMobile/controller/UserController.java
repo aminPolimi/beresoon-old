@@ -24,11 +24,11 @@ public class UserController {
 	private UserBL usr=new UserBL();
 
 	
-	@GetMapping("/login/{email}&{password}")
-	public ResponseEntity login(@PathVariable("email") String email, @PathVariable("password") String pass) {
+	@GetMapping("/login/{code}")
+	public ResponseEntity login(@PathVariable("code") String code) {
 		System.out.println("in login");
 		try{
-			return new ResponseEntity(usr.login(email, pass),HttpStatus.OK);
+			return new ResponseEntity(usr.login(code),HttpStatus.OK);
 		}catch (Exception e) {
 			return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
 		}
