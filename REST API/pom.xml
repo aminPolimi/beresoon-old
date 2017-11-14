@@ -11,6 +11,7 @@
 		<java-version>1.7</java-version>
 		<springframework.version>4.3.1.RELEASE</springframework.version>
 		<jackson.version>2.7.5</jackson.version>
+		<springsecurity.version>4.1.1.RELEASE</springsecurity.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -34,10 +35,28 @@
 		    <artifactId>mysql-connector-java</artifactId>
 		    <version>6.0.5</version>
 		</dependency>
-
-	</dependencies>
+		<dependency>
+			    <groupId>commons-codec</groupId>
+			    <artifactId>commons-codec</artifactId>
+			    <version>1.10</version>
+			</dependency>
+			
+			<!-- Spring Security -->
+		<!-- <dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>${springsecurity.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${springsecurity.version}</version>
+		</dependency> -->
+		<!-- Spring Security -->
+		
+		</dependencies>
 	<build>
-		<finalName>HelloWorld</finalName>
+		<finalName>Beresoon</finalName>
 		<pluginManagement>
 			<plugins>
 				<plugin>

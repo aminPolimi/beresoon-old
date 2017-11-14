@@ -1,6 +1,7 @@
 package com.poliMobile.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,31 +14,62 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.poliMobile.model.*;
+import com.poliMobile.bussines.*;
+import com.poliMobile.model.AuthenticationModel;
 
 @RestController
 public class UserController {
-
 	
 	@Autowired
-	private User usr;
+	private UserBL usr=new UserBL();
 
 	
-	@GetMapping("/login/{userName}&{password}")
-	public ResponseEntity login(@PathVariable("userName") String un, @PathVariable("password") String pass) {
+	@GetMapping("/login/{email}&{password}")
+	public ResponseEntity login(@PathVariable("email") String email, @PathVariable("password") String pass) {
+		System.out.println("in login");
 		try{
-		UserModel um = new UserModel();
-		String res = um.login(un, pass);
-		return new ResponseEntity(res,HttpStatus.OK);
+			return new ResponseEntity(usr.login(email, pass),HttpStatus.OK);
 		}catch (Exception e) {
-			return new ResponseEntity(e.getMessage(),HttpStatus.EXPECTATION_FAILED);
+			return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
 		}
 	}
 
+	@GetMapping("/logout/{email}&{token}")
+	public ResponseEntity logout(@PathVariable("email") String email, @PathVariable("password") String token) {
+		System.out.println("in login");
+		try{
+			AuthenticationModel auth = new AuthenticationModel();
+			return new ResponseEntity(auth.deleteToken(email, token),HttpStatus.OK);
+		}catch (Exception e) {
+			return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@GetMapping("/user/{id}")
+	public ResponseEntity getUser(@PathVariable("id") int id){
+		try{
+			return new ResponseEntity(usr.getUser(id),HttpStatus.OK);
+		}catch (Exception e) {
+			return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
+		}
+	}
+	
 	@PostMapping("/signup")
-	public ResponseEntity signup(@RequestBody User user){
-		
-		return new ResponseEntity(user,HttpStatus.ACCEPTED);
+	public ResponseEntity signup(@RequestBody Map<String,Object> user){
+		try{
+			return new ResponseEntity(usr.addUser(user),HttpStatus.OK);
+		}catch (Exception e) {
+			return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@PostMapping("/user/update")
+	public ResponseEntity updateUser(@RequestBody Map<String,Object> user){
+		try{
+			return new ResponseEntity(usr.updateUser(user),HttpStatus.OK);
+		}catch (Exception e) {
+			return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
+		}
 	}
 
 }

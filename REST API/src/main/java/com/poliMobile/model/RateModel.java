@@ -1,7 +1,5 @@
 package com.poliMobile.model;
 
-import com.mysql.cj.jdbc.result.ResultSetMetaData;
-import com.poliMobile.config.DataConfig;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,12 +10,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ProductModel {
-	
+import com.mysql.cj.jdbc.result.ResultSetMetaData;
+import com.poliMobile.config.DataConfig;
+
+public class RateModel {
+
 	Connection conn = null;
 	PreparedStatement stmt = null;
 	
-	public ProductModel() throws Exception{
+	public RateModel() throws Exception{
 		try{
 			Class.forName(DataConfig.JDBC_DRIVER);
 			conn = DriverManager.getConnection(DataConfig.DB_URL+DataConfig.DB,DataConfig.USER,DataConfig.PASS);
@@ -26,32 +27,22 @@ public class ProductModel {
 			throw e;
 			// TODO: handle exception
 			}
-		}
+	}
 	
-	public List<Map<String, Object>> getProducts(int productID) throws Exception{
-		String pID = "";
-		if (productID>0)
-			pID = " and p.ID = " + productID;
+	public List<Map<String, Object>> getRates(int userID) throws Exception{
 		ResultSet res;
-			stmt = conn.prepareStatement("select p.ID, p.`Name`, p.Description, p.Price, p.URL, p.ImageQuantity, "+
-											"p.CategoryID, c.`Name` as Category, d.Discount "+
-										"from Product p join Category c on p.CategoryID=c.ID and p.Valid = 1 "+ pID +
-										" left join Discount d on p.ID=d.ProductID and NOW() BETWEEN d.StartDate and d.EndDate");
+			stmt = conn.prepareStatement("select * from Rate");
 			res = stmt.executeQuery();
 			List<Map<String, Object>> ds = resultSetToList(res);
 			close();
 			return ds;
 	}
 	
-	public boolean addProduct(String name, String description, String url, int imageQuantity, float price, int category) throws Exception{
-		stmt = conn.prepareStatement("insert into Product(name, description, URL, ImageQuantity, price, CategoryID) "+
-					"values(?,?,?,?,?,?)");
-		stmt.setString(1, name);
-		stmt.setString(2, description);
-		stmt.setString(3, url);
-		stmt.setInt(4, imageQuantity);
-		stmt.setFloat(5, price);
-		stmt.setInt(6, category);
+	public boolean addRate(int paymentID, int rate,String desc) throws Exception{
+		stmt = conn.prepareStatement("insert into Rate (PaymentID, rate, Description) values(?,?,?)");
+		stmt.setInt(1, paymentID);
+		stmt.setInt(2, rate);
+		stmt.setString(3, desc);
 		int res = stmt.executeUpdate();
 		close();
 		if (res>0)
@@ -60,8 +51,8 @@ public class ProductModel {
 			return false;
 	}
 	
-	public boolean removeProduct(int id) throws Exception{
-		stmt = conn.prepareStatement("delete from Product where ID = ?");
+	public boolean removeRate(int id) throws Exception{
+		stmt = conn.prepareStatement("delete from Rate where ID = ?");
 		stmt.setInt(1, id);
 		int res = stmt.executeUpdate();
 		close();
@@ -71,14 +62,6 @@ public class ProductModel {
 			return false;
 	}
 	
-	public  List<Map<String, Object>> getCategories() throws Exception{
-		ResultSet res;
-		stmt = conn.prepareStatement("select * from Category");
-		res = stmt.executeQuery();
-		List<Map<String, Object>> ds = resultSetToList(res);
-		close();
-		return ds;
-	}
 	
 	private List<Map<String, Object>> resultSetToList(ResultSet rs) throws SQLException {
 	    ResultSetMetaData md = (ResultSetMetaData) rs.getMetaData();
@@ -107,4 +90,5 @@ public class ProductModel {
 	
 	        }
 	}
+	
 }

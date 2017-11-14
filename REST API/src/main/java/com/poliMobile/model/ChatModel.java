@@ -1,7 +1,5 @@
 package com.poliMobile.model;
 
-import com.mysql.cj.jdbc.result.ResultSetMetaData;
-import com.poliMobile.config.DataConfig;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,46 +10,51 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ProductModel {
-	
+import com.mysql.cj.jdbc.result.ResultSetMetaData;
+import com.poliMobile.config.DataConfig;
+
+public class ChatModel {
+
 	Connection conn = null;
 	PreparedStatement stmt = null;
 	
-	public ProductModel() throws Exception{
+	public ChatModel() throws Exception{
 		try{
 			Class.forName(DataConfig.JDBC_DRIVER);
-			conn = DriverManager.getConnection(DataConfig.DB_URL+DataConfig.DB,DataConfig.USER,DataConfig.PASS);
+			conn = DriverManager.getConnection(DataConfig.DB_URL+DataConfig.DB ,DataConfig.USER,DataConfig.PASS);
 			}
 		catch (Exception e) {
 			throw e;
 			// TODO: handle exception
 			}
-		}
+	}
 	
-	public List<Map<String, Object>> getProducts(int productID) throws Exception{
-		String pID = "";
-		if (productID>0)
-			pID = " and p.ID = " + productID;
+	public List<Map<String, Object>> getChats(int requestID,int userID, int partnerID) throws Exception{
+		String rID = "";
+		if (requestID>0)
+			rID = " and r.ID = " + requestID;
+		if (userID>0)
+			rID += " and u.ID = " + userID;
+		if (partnerID>0)
+			rID += " and up.ID = " + partnerID;
+		
 		ResultSet res;
-			stmt = conn.prepareStatement("select p.ID, p.`Name`, p.Description, p.Price, p.URL, p.ImageQuantity, "+
-											"p.CategoryID, c.`Name` as Category, d.Discount "+
-										"from Product p join Category c on p.CategoryID=c.ID and p.Valid = 1 "+ pID +
-										" left join Discount d on p.ID=d.ProductID and NOW() BETWEEN d.StartDate and d.EndDate");
+			stmt = conn.prepareStatement("select c.ID, c.RegisterDate, c.Message, u.ID, u.FirstName, u.LastName, "+
+									"c.PartnerUserID, up.FirstName partnerName, up.LastName partnerLastName "+
+								"from Chat c join Requests r on r.ID=c.RequestsID "+ 
+								"join `User` up on up.ID=c.PartnerUserID "+
+								"join `User` u on u.ID=r.UserID "+rID);
 			res = stmt.executeQuery();
 			List<Map<String, Object>> ds = resultSetToList(res);
 			close();
 			return ds;
 	}
 	
-	public boolean addProduct(String name, String description, String url, int imageQuantity, float price, int category) throws Exception{
-		stmt = conn.prepareStatement("insert into Product(name, description, URL, ImageQuantity, price, CategoryID) "+
-					"values(?,?,?,?,?,?)");
-		stmt.setString(1, name);
-		stmt.setString(2, description);
-		stmt.setString(3, url);
-		stmt.setInt(4, imageQuantity);
-		stmt.setFloat(5, price);
-		stmt.setInt(6, category);
+	public boolean addChat(String message,int partnerID, int requestID) throws Exception{
+		stmt = conn.prepareStatement("insert into Chat (Message, PartnerUserID, RequestsID) values(?,?,?)");
+		stmt.setString(1, message);
+		stmt.setInt(2, partnerID);
+		stmt.setInt(3, requestID);
 		int res = stmt.executeUpdate();
 		close();
 		if (res>0)
@@ -60,8 +63,8 @@ public class ProductModel {
 			return false;
 	}
 	
-	public boolean removeProduct(int id) throws Exception{
-		stmt = conn.prepareStatement("delete from Product where ID = ?");
+	public boolean removeChat(int id) throws Exception{
+		stmt = conn.prepareStatement("delete from Chat where ID = ? and 1=0");
 		stmt.setInt(1, id);
 		int res = stmt.executeUpdate();
 		close();
@@ -71,14 +74,6 @@ public class ProductModel {
 			return false;
 	}
 	
-	public  List<Map<String, Object>> getCategories() throws Exception{
-		ResultSet res;
-		stmt = conn.prepareStatement("select * from Category");
-		res = stmt.executeQuery();
-		List<Map<String, Object>> ds = resultSetToList(res);
-		close();
-		return ds;
-	}
 	
 	private List<Map<String, Object>> resultSetToList(ResultSet rs) throws SQLException {
 	    ResultSetMetaData md = (ResultSetMetaData) rs.getMetaData();

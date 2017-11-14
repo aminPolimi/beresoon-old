@@ -1,8 +1,7 @@
 package com.poliMobile.model;
 
-import com.mysql.cj.jdbc.result.ResultSetMetaData;
-import com.poliMobile.config.DataConfig;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,12 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ProductModel {
-	
+import com.mysql.cj.jdbc.result.ResultSetMetaData;
+import com.poliMobile.config.DataConfig;
+
+public class DiscountModel {
+
 	Connection conn = null;
 	PreparedStatement stmt = null;
 	
-	public ProductModel() throws Exception{
+	public DiscountModel() throws Exception{
 		try{
 			Class.forName(DataConfig.JDBC_DRIVER);
 			conn = DriverManager.getConnection(DataConfig.DB_URL+DataConfig.DB,DataConfig.USER,DataConfig.PASS);
@@ -26,32 +28,30 @@ public class ProductModel {
 			throw e;
 			// TODO: handle exception
 			}
-		}
+	}
 	
-	public List<Map<String, Object>> getProducts(int productID) throws Exception{
-		String pID = "";
-		if (productID>0)
-			pID = " and p.ID = " + productID;
+	public List<Map<String, Object>> getDiscounts(int discountID) throws Exception{
+		String dID = "";
+		if (discountID>0)
+			dID = " and d.ID = " + discountID;
 		ResultSet res;
 			stmt = conn.prepareStatement("select p.ID, p.`Name`, p.Description, p.Price, p.URL, p.ImageQuantity, "+
 											"p.CategoryID, c.`Name` as Category, d.Discount "+
-										"from Product p join Category c on p.CategoryID=c.ID and p.Valid = 1 "+ pID +
-										" left join Discount d on p.ID=d.ProductID and NOW() BETWEEN d.StartDate and d.EndDate");
+										 "from Discount d join Product p on p.ID=d.ProductID "+ dID +
+										     " and NOW() BETWEEN d.StartDate and d.EndDate and p.Valid = 1 "+ 
+										 " join Category c on p.CategoryID=c.ID");
 			res = stmt.executeQuery();
 			List<Map<String, Object>> ds = resultSetToList(res);
 			close();
 			return ds;
 	}
 	
-	public boolean addProduct(String name, String description, String url, int imageQuantity, float price, int category) throws Exception{
-		stmt = conn.prepareStatement("insert into Product(name, description, URL, ImageQuantity, price, CategoryID) "+
-					"values(?,?,?,?,?,?)");
-		stmt.setString(1, name);
-		stmt.setString(2, description);
-		stmt.setString(3, url);
-		stmt.setInt(4, imageQuantity);
-		stmt.setFloat(5, price);
-		stmt.setInt(6, category);
+	public boolean addDiscount(int productID, float discount, Date startDate, Date endDate) throws Exception{
+		stmt = conn.prepareStatement("insert into Discount(ProductID, Discount, StartDate, EndDate) values (?,?,?,?) ");
+		stmt.setInt(1, productID);
+		stmt.setFloat(2, discount);
+		stmt.setDate(3, startDate);
+		stmt.setDate(4, endDate);
 		int res = stmt.executeUpdate();
 		close();
 		if (res>0)
@@ -60,8 +60,8 @@ public class ProductModel {
 			return false;
 	}
 	
-	public boolean removeProduct(int id) throws Exception{
-		stmt = conn.prepareStatement("delete from Product where ID = ?");
+	public boolean removeDiscount(int id) throws Exception{
+		stmt = conn.prepareStatement("delete from Discount where ID = ?");
 		stmt.setInt(1, id);
 		int res = stmt.executeUpdate();
 		close();
@@ -71,14 +71,6 @@ public class ProductModel {
 			return false;
 	}
 	
-	public  List<Map<String, Object>> getCategories() throws Exception{
-		ResultSet res;
-		stmt = conn.prepareStatement("select * from Category");
-		res = stmt.executeQuery();
-		List<Map<String, Object>> ds = resultSetToList(res);
-		close();
-		return ds;
-	}
 	
 	private List<Map<String, Object>> resultSetToList(ResultSet rs) throws SQLException {
 	    ResultSetMetaData md = (ResultSetMetaData) rs.getMetaData();
